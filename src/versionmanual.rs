@@ -330,4 +330,36 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
        // No existe ruta.
        None
    }
+   //Funcion que cumple la con la tarea de reconstruir el camino encontrado por BFS,
+   //se le pasa el vector de padres, el indice de origen y el índice de destino,
+   //devuelve un vector con los índices de las estaciones por donde pasa la ruta encontrada.
+   //En pocas palabras reordena el camino encontrado por BFS para que quede
+   //en el orden correcto desde origen a destino.
+   fn reconstruir_camino(
+       &self,
+       padre: &[Option<usize>],
+       origen: usize,
+       destino: usize
+   ) -> Vec<usize> {
+       let mut camino = Vec::new();
+       // Comenzamos desde el destino.
+       let mut actual = destino;
+       loop {
+           // Guardamos el nodo actual.
+           camino.push(actual);
+           // Si llegamos al origen terminamos.
+           if actual == origen {
+               break;
+           }
+           // Retrocedemos al padre.
+           match padre[actual] {
+               Some(p) => actual = p,
+               None => break,
+           }
+       }
+       // El camino quedó al revés.
+       camino.reverse();
+       camino
+   }
+
 
