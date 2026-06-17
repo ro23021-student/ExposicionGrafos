@@ -219,5 +219,48 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
        println!("{}", "                 ".yellow());
        println!("{}", format!("╚{}╝", sep).yellow());
        println!();
-   }   
+   }
+    
+      //Función más importante la que hace la función de encontrar la ruta
+    //mas corta entre dos estaciones por medio de una búsqueda de anchura,
+    //se le pasa el indice de la estación de origen y el índice de la estación destino,
+    // devuelve un vector con los índices de las estaciones por donde pasa la ruta
+    // encontrada o None si no existe ruta.
+    fn bfs(&self, origen: usize, destino: usize) -> Option<Vec<usize>> {
+       // Número total de estaciones.
+       let n = self.estaciones.len();
+       // Indica si una estación ya fue visitada.
+       let mut visitado = vec![false; n];
+       // Guarda quién descubrió cada nodo.
+       let mut padre: Vec<Option<usize>> = vec![None; n];
+       // Cola utilizada por BFS.
+       let mut cola: VecDeque<usize> = VecDeque::new();
+       // El origen es la primera estación visitada.
+       visitado[origen] = true;
+       // Se agrega a la cola.
+       cola.push_back(origen);
+       // Mientras existan estaciones pendientes.
+       while let Some(actual) = cola.pop_front() {
+           // Si llegamos al destino,
+           // reconstruimos el camino encontrado.
+           if actual == destino {
+               return Some( self.reconstruir_camino( &padre,  origen,  destino )
+               );
+           }
+           // Recorremos a los vecinos.
+           for &v in &self.adyacencia[actual] {
+               // Solo procesamos estaciones no visitadas.
+               if !visitado[v] {
+                   // Se marca como visitada.
+                   visitado[v] = true;
+                   // Guardamos desde dónde fue alcanzada.
+                   padre[v] = Some(actual);
+                   // Se agrega a la cola.
+                   cola.push_back(v);
+               }
+           }
+       }
+       // No existe ruta.
+       None
+   }
 
