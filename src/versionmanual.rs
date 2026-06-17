@@ -1,6 +1,13 @@
 use std:: collections::VecDeque;
 use colored::*;
 
+struct RedTrenes {
+   estaciones: Vec<String>,
+   adyacencia: Vec<Vec<usize>>,
+}
+
+
+
 pub fn ejecutar(){
     //llamamos a la funcion para crear vías entre estaciones
    red.agregar_via(auroria,  velstrom);
