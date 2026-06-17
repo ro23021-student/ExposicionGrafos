@@ -51,59 +51,7 @@ fn mostrar_red(&self) {
        println!();
    }
 
-}
-
-
-
-pub fn ejecutar(){
-    println!("=================================");
-   println!("IMPLEMENTACION MANUAL");
-   println!("=================================");
-   // creamos una estancia de la red de trenes
-   let mut red = RedTrenes::nueva();
-   //llamamos a la función para crear estaciones
-   let auroria  = red.agregar_estacion("Auroria");   // 0
-   let velstrom = red.agregar_estacion("Velstrom");  // 1
-   let nexara   = red.agregar_estacion("Nexara");    // 2
-   let dralion  = red.agregar_estacion("Dralion");   // 3
-   let korveth  = red.agregar_estacion("Korveth");   // 4
-   let myrenth  = red.agregar_estacion("Myrenth");   // 5
-   let caldrix  = red.agregar_estacion("Caldrix");   // 6
-   let zentova  = red.agregar_estacion("Zentova");   // 7
-   let pyloran  = red.agregar_estacion("Pyloran");   // 8
-   let thornex  = red.agregar_estacion("Thornex");   // 9
-
-
-   red.mostrar_red();
-
-    //llamamos a la funcion para crear vías entre estaciones
-   red.agregar_via(auroria,  velstrom);
-   red.agregar_via(velstrom, nexara);
-   red.agregar_via(nexara,   dralion);
-   red.agregar_via(dralion,  korveth);
-   red.agregar_via(korveth,  myrenth);
-   red.agregar_via(myrenth,  caldrix);
-   red.agregar_via(caldrix,  zentova);
-   red.agregar_via(zentova,  auroria);
-
-
-   //Pyloran es nuestro centro de conexiones, tiene vías a casi todas las estaciones
-   red.agregar_via(pyloran, auroria);
-   red.agregar_via(pyloran, nexara);
-   red.agregar_via(pyloran, korveth);
-   red.agregar_via(pyloran, caldrix);
-
-
-   //thornex es una estacion apartada, de las demas estaciones solo tiene vias a dralion y velstrom
-   red.agregar_via(thornex, dralion);
-   red.agregar_via(thornex, velstrom);
-
-   red.mostrar_diagrama(None);
-
-}
-
-
-// Conecta dos estaciones mediante una vía.
+   // Conecta dos estaciones mediante una vía.
     // Como el grafo es NO DIRIGIDO, la conexión se registra en ambos sentidos
     // (si A llega a B, entonces B también llega a A).
 
@@ -361,5 +309,111 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
        camino.reverse();
        camino
    }
+
+}
+
+
+
+pub fn ejecutar(){
+    println!("=================================");
+   println!("IMPLEMENTACION MANUAL");
+   println!("=================================");
+   // creamos una estancia de la red de trenes
+   let mut red = RedTrenes::nueva();
+   //llamamos a la función para crear estaciones
+   let auroria  = red.agregar_estacion("Auroria");   // 0
+   let velstrom = red.agregar_estacion("Velstrom");  // 1
+   let nexara   = red.agregar_estacion("Nexara");    // 2
+   let dralion  = red.agregar_estacion("Dralion");   // 3
+   let korveth  = red.agregar_estacion("Korveth");   // 4
+   let myrenth  = red.agregar_estacion("Myrenth");   // 5
+   let caldrix  = red.agregar_estacion("Caldrix");   // 6
+   let zentova  = red.agregar_estacion("Zentova");   // 7
+   let pyloran  = red.agregar_estacion("Pyloran");   // 8
+   let thornex  = red.agregar_estacion("Thornex");   // 9
+
+   //llamamos a la funcion para crear vías entre estaciones
+   red.agregar_via(auroria,  velstrom);
+   red.agregar_via(velstrom, nexara);
+   red.agregar_via(nexara,   dralion);
+   red.agregar_via(dralion,  korveth);
+   red.agregar_via(korveth,  myrenth);
+   red.agregar_via(myrenth,  caldrix);
+   red.agregar_via(caldrix,  zentova);
+   red.agregar_via(zentova,  auroria);
+
+
+   //Pyloran es nuestro centro de conexiones, tiene vías a casi todas las estaciones
+   red.agregar_via(pyloran, auroria);
+   red.agregar_via(pyloran, nexara);
+   red.agregar_via(pyloran, korveth);
+   red.agregar_via(pyloran, caldrix);
+
+
+   //thornex es una estacion apartada, de las demas estaciones solo tiene vias a dralion y velstrom
+   red.agregar_via(thornex, dralion);
+   red.agregar_via(thornex, velstrom);
+
+   red.mostrar_red();
+   red.mostrar_diagrama(None);
+
+       //se crea el vecto de busqueda de rutas entre estaciones, 
+    // cada tupla tiene el indice de la estacion de origen, 
+    // el indice de la estacion destino, el nombre de la estacion de origen 
+    // y el nombre de la estacion destino, esto se hace para luego mostrar los 
+    // resultados de las busquedas de rutas entre estas estaciones.
+    let busquedas = vec![
+        (zentova,  nexara,   "Zentova",  "Nexara"),
+        (caldrix,  velstrom, "Caldrix",  "Velstrom"),
+        (thornex,  myrenth,  "Thornex",  "Myrenth"),
+        (dralion,  zentova,  "Dralion",  "Zentova"),
+    ];
+
+    println!("{}", "╔══════════════════════════════════════════════════════════╗".green());
+    println!("{}", "║      BFS — RUTAS DE ALGUNAS ESTACIONES                   ║".green());
+    println!("{}", "╚══════════════════════════════════════════════════════════╝".green());
+    println!();
+
+    //aqui se hace la busqueda de rutas entre las estaciones definidas en el vector de busqueda.
+    for (origen, destino, nom_o, nom_d) in busquedas {
+        println!("  {} {} {} {}",
+            "Ruta:".bright_green().bold(),
+            nom_o.bright_white().bold(),
+            "→".bright_green(),
+            nom_d.bright_white().bold());
+
+            //Aqui se hace la tarea de crear el camino en el diagarama 
+        match red.bfs(origen, destino) {
+            Some(camino) => {
+                print!("  ");
+                for (i, &idx) in camino.iter().enumerate() {
+                    if i == 0 || i == camino.len() - 1 {
+                        print!("{}", red.estaciones[idx].bright_yellow().bold());
+                    } else {
+                        print!("{}", red.estaciones[idx].white());
+                    }
+                    if i < camino.len() - 1 { print!("{}", " → ".bright_green()); }
+                }
+                //Aqui damos una decripcion de los saltos dados por estaciones y vias.
+                println!();
+                let paradas = camino.len() - 2;
+                let saltos  = camino.len() - 1;
+                println!("  {} {}   {} {}",
+                    "Paradas intermedias:".bright_cyan(), paradas.to_string().bright_white().bold(),
+                    "Caminos totales:".bright_cyan(),      saltos.to_string().bright_white().bold());
+
+                red.mostrar_diagrama(Some(&camino));
+            }
+            None => println!("  {}", "No existe ruta entre estas estaciones.".bright_red()),
+        }
+
+        println!("  {}", "─".repeat(56).bright_black());
+        println!();
+    }
+
+    println!("{}", "  Fin del recorrido RedRail.".bright_green().bold());
+    println!();
+
+}
 
 
