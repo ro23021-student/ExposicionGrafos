@@ -2,7 +2,30 @@ use std:: collections::VecDeque;
 use colored::*;
 
 pub fn ejecutar(){
-    
+    //llamamos a la funcion para crear vías entre estaciones
+   red.agregar_via(auroria,  velstrom);
+   red.agregar_via(velstrom, nexara);
+   red.agregar_via(nexara,   dralion);
+   red.agregar_via(dralion,  korveth);
+   red.agregar_via(korveth,  myrenth);
+   red.agregar_via(myrenth,  caldrix);
+   red.agregar_via(caldrix,  zentova);
+   red.agregar_via(zentova,  auroria);
+
+
+   //Pyloran es nuestro centro de conexiones, tiene vías a casi todas las estaciones
+   red.agregar_via(pyloran, auroria);
+   red.agregar_via(pyloran, nexara);
+   red.agregar_via(pyloran, korveth);
+   red.agregar_via(pyloran, caldrix);
+
+
+   //thornex es una estacion apartada, de las demas estaciones solo tiene vias a dralion y velstrom
+   red.agregar_via(thornex, dralion);
+   red.agregar_via(thornex, velstrom);
+
+   red.mostrar_diagrama(None);
+
 }
 
 
