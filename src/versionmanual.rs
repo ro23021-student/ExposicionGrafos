@@ -5,6 +5,7 @@ struct RedTrenes {
    estaciones: Vec<String>,
    adyacencia: Vec<Vec<usize>>,
 }
+
 impl RedTrenes {
 
 
@@ -15,18 +16,72 @@ impl RedTrenes {
            adyacencia: Vec::new(),
        }
    }
-fn agregar_estacion(&mut self, nombre: &str) -> usize {
-       // El tamaño actual del vector será el índice
-       // que ocupará la nueva estación.
+
+    //Funcion para crear las estaciones
+    fn agregar_estacion(&mut self, nombre: &str) -> usize {
        let i = self.estaciones.len();
-       // Guarda el nombre.
        self.estaciones.push(nombre.to_string());
-       // Crea una lista vacía para sus conexiones.
        self.adyacencia.push(Vec::new());
        // Devuelve el índice generado.
        i
    }
-fn mostrar_red(&self) {
+
+    // Conecta dos estaciones mediante una vía.
+    fn agregar_via(&mut self, a: usize, b: usize) {
+       self.adyacencia[a].push(b);
+       self.adyacencia[b].push(a);
+   }
+
+    //Funcion para encontrar la ruta mas corta por anchura entre dos estaciones utilizando el algoritmo BFS
+    fn bfs(&self, origen: usize, destino: usize) -> Option<Vec<usize>> {
+
+       let n = self.estaciones.len();
+       let mut visitado = vec![false; n];
+       let mut padre: Vec<Option<usize>> = vec![None; n];
+       let mut cola: VecDeque<usize> = VecDeque::new();
+       
+       visitado[origen] = true;
+       cola.push_back(origen);
+       while let Some(actual) = cola.pop_front() {
+           
+           if actual == destino {
+               return Some( self.reconstruir_camino( &padre,  origen,  destino )
+               );
+           }
+           // Recorremos a los vecinos.
+           for &v in &self.adyacencia[actual] {
+               if !visitado[v] {
+                   visitado[v] = true;
+                   padre[v] = Some(actual);
+                   // Se agrega a la cola.
+                   cola.push_back(v);
+               }
+           }
+       }
+       None
+   }
+
+   //Funcion que cumple la con la tarea de reconstruir el camino encontrado por BFS,
+   fn reconstruir_camino(&self,padre: &[Option<usize>],origen: usize,destino: usize) -> Vec<usize> {
+       let mut camino = Vec::new();
+       let mut actual = destino;
+       loop {
+           camino.push(actual);
+           if actual == origen {
+               break;
+           }
+           match padre[actual] {
+               Some(p) => actual = p,
+               None => break,
+           }
+       }
+       // El camino quedó al revés.
+       camino.reverse();
+       camino
+   }
+
+    //Funcion para mostrar la red de trenes en formato de lista de adyacencia, con colores y formato para mejorar la visualización.
+    fn mostrar_red(&self) {
        let w = 58usize;
        println!();
        println!("{}", format!("╔{}╗", "═".repeat(w)).yellow());
@@ -49,24 +104,10 @@ fn mostrar_red(&self) {
            "Vértices totales V:".bright_cyan(), self.estaciones.len().to_string().bright_white().bold(),
            "Aristas totales E:".bright_cyan(),  e.to_string().bright_white().bold());
        println!();
-   }
+    }    
 
-   // Conecta dos estaciones mediante una vía.
-    // Como el grafo es NO DIRIGIDO, la conexión se registra en ambos sentidos
-    // (si A llega a B, entonces B también llega a A).
-
-    fn agregar_via(&mut self, a: usize, b: usize) {
-       // A puede llegar a B.
-       self.adyacencia[a].push(b);
-       // B puede llegar a A.
-       self.adyacencia[b].push(a);
-   }
-
-fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
-       // let coords: Este trozo de código son las coordenadas de cada estación para luego dibujar el
-       // diagrama de la red, se asignan manualmente para que quede visualmente bien, no es
-       // parte del algoritmo de grafos ni nada por el estilo, es solo para mostrar el diagrama
-       // de la red de trenes con las estaciones en posiciones fijas.
+    //Funcion para mostrar el diagrama de la red de trenes
+    fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
        let coords: [(i32, i32); 10] = [
            (13,  5),  // 0 Auroria
            (32,  2),  // 1 Velstrom
@@ -79,7 +120,6 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
            (32, 13),  // 8 Pyloran
            (59,  3),  // 9 Thornex
        ];
-
 
        //Esto crea el recuadro donde todo el diagrama se crea.
        const FILAS: usize = 27;
@@ -132,14 +172,13 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
            }
        };
 
-
        //Aquí se llama a trazar para dibujar las vías entre estaciones,
        // se recorre la lista de adyacencia y se dibuja una línea entre
        // cada par de estaciones conectadas, si la vía está en la ruta resaltada
        // se dibuja con un color diferente.
        for i in 0..self.estaciones.len() {
            for &j in &self.adyacencia[i] {
- if j <= i { continue; }
+        if j <= i { continue; }
                let (ax, ay) = (coords[i].0, coords[i].1);
                let (bx, by) = (coords[j].0, coords[j].1);
                let en_ruta = ruta_aristas.contains(&(i.min(j), i.max(j)));
@@ -169,18 +208,18 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
            }
        }
       
-       //Se crea el recuadro visualmente que se ve el diagrama la parte de arriba y
-       //  tambien la primera línea que encierra el diagrama
-       // ── Cabecera (ancho fijo 72: ║ + 70 + ║) ────────────────
-       let sep = "═".repeat(72);
-       let sep2 = "─".repeat(72);
-       println!();
-       println!("{}", format!("╔{}╗", sep).yellow());
-       // Título centrado sobre 70 caracteres ASCII — sin Unicode dentro → format! funciona bien
-       let titulo = format!("{:^70}", "REDRAIL — DIAGRAMA DE RED");
-       println!("{}", format!("║{}  ║", titulo).yellow());
-       if let Some(r) = ruta {
-  let o = &self.estaciones[r[0]];
+        //Se crea el recuadro visualmente que se ve el diagrama la parte de arriba y
+        //  tambien la primera línea que encierra el diagrama
+        // ── Cabecera (ancho fijo 72: ║ + 70 + ║) ────────────────
+        let sep = "═".repeat(72);
+        let sep2 = "─".repeat(72);
+        println!();
+        println!("{}", format!("╔{}╗", sep).yellow());
+        // Título centrado sobre 70 caracteres ASCII — sin Unicode dentro → format! funciona bien
+        let titulo = format!("{:^70}", "REDRAIL — DIAGRAMA DE RED");
+        println!("{}", format!("║{}  ║", titulo).yellow());
+        if let Some(r) = ruta {
+        let o = &self.estaciones[r[0]];
            let d = &self.estaciones[*r.last().unwrap()];
            // Línea de ruta: print! directo para no romper el ancho
            // "║  Ruta resaltada: " = 19 chars visibles
@@ -219,11 +258,10 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
                print!("{}", out);
            }
            println!("{}", " ║".yellow());
-       }
+        }
 
 
  //Aqui se crea la parta donde muestra que descripción del diagrama.
-       // ── Leyenda ──────────────────────────────────────────────
        println!("{}", format!("╠{}╣", sep2).yellow());
        print!("{}", "║  ".yellow());
        print!("{}", "●".bright_blue().bold());   print!(" Estación normal   ");
@@ -234,80 +272,6 @@ fn mostrar_diagrama(&self, ruta: Option<&Vec<usize>>) {
        println!("{}", "                 ".yellow());
        println!("{}", format!("╚{}╝", sep).yellow());
        println!();
-   }
-    
-      //Función más importante la que hace la función de encontrar la ruta
-    //mas corta entre dos estaciones por medio de una búsqueda de anchura,
-    //se le pasa el indice de la estación de origen y el índice de la estación destino,
-    // devuelve un vector con los índices de las estaciones por donde pasa la ruta
-    // encontrada o None si no existe ruta.
-    fn bfs(&self, origen: usize, destino: usize) -> Option<Vec<usize>> {
-       // Número total de estaciones.
-       let n = self.estaciones.len();
-       // Indica si una estación ya fue visitada.
-       let mut visitado = vec![false; n];
-       // Guarda quién descubrió cada nodo.
-       let mut padre: Vec<Option<usize>> = vec![None; n];
-       // Cola utilizada por BFS.
-       let mut cola: VecDeque<usize> = VecDeque::new();
-       // El origen es la primera estación visitada.
-       visitado[origen] = true;
-       // Se agrega a la cola.
-       cola.push_back(origen);
-       // Mientras existan estaciones pendientes.
-       while let Some(actual) = cola.pop_front() {
-           // Si llegamos al destino,
-           // reconstruimos el camino encontrado.
-           if actual == destino {
-               return Some( self.reconstruir_camino( &padre,  origen,  destino )
-               );
-           }
-           // Recorremos a los vecinos.
-           for &v in &self.adyacencia[actual] {
-               // Solo procesamos estaciones no visitadas.
-               if !visitado[v] {
-                   // Se marca como visitada.
-                   visitado[v] = true;
-                   // Guardamos desde dónde fue alcanzada.
-                   padre[v] = Some(actual);
-                   // Se agrega a la cola.
-                   cola.push_back(v);
-               }
-           }
-       }
-       // No existe ruta.
-       None
-   }
-   //Funcion que cumple la con la tarea de reconstruir el camino encontrado por BFS,
-   //se le pasa el vector de padres, el indice de origen y el índice de destino,
-   //devuelve un vector con los índices de las estaciones por donde pasa la ruta encontrada.
-   //En pocas palabras reordena el camino encontrado por BFS para que quede
-   //en el orden correcto desde origen a destino.
-   fn reconstruir_camino(
-       &self,
-       padre: &[Option<usize>],
-       origen: usize,
-       destino: usize
-   ) -> Vec<usize> {
-       let mut camino = Vec::new();
-       // Comenzamos desde el destino.
-       let mut actual = destino;
-       loop {
-           // Guardamos el nodo actual.
-           camino.push(actual);
-           // Si llegamos al origen terminamos.
-           if actual == origen {
-               break;
-           }
-           // Retrocedemos al padre.
-           match padre[actual] {
-               Some(p) => actual = p,
-               None => break,
-           }
-       }
-       // El camino quedó al revés.
-       camino.reverse();
-       camino
    }
 
 }
